@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 import crud
@@ -9,6 +10,16 @@ from db import SessionLocal, engine
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Dependency
@@ -44,7 +55,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 @app.post("/users/{user_id}/entries/", response_model=schemas.Entry)
 def create_entries_for_user(
-    user_id: int, entry: schemas.EntryCreate, db: Session = Depends(get_db)
+        user_id: int, entry: schemas.EntryCreate, db: Session = Depends(get_db)
 ):
     if entry.project_id:
         db_project = crud.get_project(db, project_id=entry.project_id)
@@ -65,6 +76,12 @@ def create_entries_for_user(
 def read_entries(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     entries = crud.get_entries(db, skip=skip, limit=limit)
     return entries
+
+
+@app.put("/entries/{entry_id}/complete/", response_model=schemas.Entry)
+def complete_entry(entry_id: int, db: Session = Depends(get_db)):
+    entry = crud.update_entry(db, entry_id=entry_id)
+    return entry
 
 
 @app.post("/users/{user_id}/projects/", response_model=schemas.Project)

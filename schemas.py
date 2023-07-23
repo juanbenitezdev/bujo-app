@@ -51,6 +51,7 @@ class Entry(EntryBase):
     id: int
     created_on: datetime.datetime
     last_updated: Optional[datetime.datetime]
+    completed: Optional[datetime.datetime]
 
     project: ProjectNotEntries
     child_entries: list[Entry] = []
@@ -59,6 +60,10 @@ class Entry(EntryBase):
 
     class Config:
         orm_mode = True
+        json_encoders = {
+            EntryTypes: lambda x: x.name,
+            EntryPriority: lambda x: x.name,
+        }
 
 
 class EntryNotTask(EntryBase):

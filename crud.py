@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy.orm import Session
 
 import models
@@ -38,6 +40,20 @@ def get_entries(db: Session, skip: int = 0, limit: int = 100):
 
 def create_entry(db: Session, entry: schemas.EntryCreate, user_id: int):
     db_entry = models.Entry(**entry.dict(), owner_id=user_id)
+    db.add(db_entry)
+    db.commit()
+    db.refresh(db_entry)
+    return db_entry
+
+
+def update_entry(db: Session, entry_id: int):
+    db_entry = get_entry(db, entry_id)
+
+    if db_entry.completed:
+        db_entry.completed = None
+    else:
+        db_entry.completed = datetime.datetime.now()
+
     db.add(db_entry)
     db.commit()
     db.refresh(db_entry)
